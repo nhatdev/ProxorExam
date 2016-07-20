@@ -91,20 +91,39 @@ public class SpreadSheet extends JFrame {
     // simply a string. To avoid circular dependencies, the depth
     // parameter keeps track of the length of the dependency chain.
     // Returns a string if value is valid, otherwise null.
-    public String evaluateToken(String tok, int depth) {
-        if (tok.length() >= 2 && tok.charAt(0) >= 'A' && 
-            tok.charAt(0) < (char) ('A' + maxCols)) {
-            int col = tok.charAt(0) - 'A';
-            int row = Integer.parseInt(tok.substring(1)) - 1;
-            if (row >= 0 && row < maxRows) {
-                if (!cells[row][col].valid) {
-                    evaluate(row, col, depth + 1);
-                }
-                if (cells[row][col].bottom) return null;
-                return cellsTF[row][col].getText();
-            }
+    public String evaluateToken(String tok, int depth, int r, int c) {
+        if (tok.isEmpty()) { 
+            return null;
         }
+
+        if (isNumber(tok)) {
+            cellsTF[r][c].setText(tok);
+            return tok;
+        } else {
+            return evaluateColumn(tok, depth);
+        }
+    }
+
+    private String evaluateColumn(String tok, int depth) {
+        if (tok.charAt(0) < 'A' || tok.charAt(0) >= (char) ('A' + maxCols)) {
+            return null;
+        }
+
+        int col = tok.charAt(0) - 'A';
+        int row = Integer.parseInt(tok.substring(1)) - 1;
+        if (row >= 0 && row < maxRows) {
+            if (!cells[row][col].valid) {
+                evaluate(row, col, depth + 1);
+            }
+            if (cells[row][col].bottom) return null;
+            return cellsTF[row][col].getText();
+        }
+
         return null;
+    }
+
+    private boolean isNumber(String tok) {
+        return tok.charAt(0) >= 48 && tok.charAt(0) <= 57;
     }
 
     /* Functions to implement formula operations -- input/output are strings
@@ -137,18 +156,18 @@ public class SpreadSheet extends JFrame {
     // formulas can have any number of tokens separated by operators, which
     //    can be *, +, /, or -. Operations are performed left to right, with
     //    no regard for operator precedence.
-    public String parseFormula(StringTokenizer tokens, int depth) 
+    public String parseFormula(StringTokenizer tokens, int depth, int r, int c) 
             throws NumberFormatException {
         if (tokens.hasMoreTokens()) {
             String tok = tokens.nextToken();
-            tok = evaluateToken(tok, depth);
+            tok = evaluateToken(tok, depth, r, c);
             if (tok == null) return null;
             while (tokens.hasMoreTokens()) {
                 String tok2 = tokens.nextToken();
                 if (tok2 == null) return null;
                 if (!tokens.hasMoreTokens()) return null;
                 String tok3 = tokens.nextToken();
-                tok3 = evaluateToken(tok3, depth);
+                tok3 = evaluateToken(tok3, depth, r, c);
                 if (tok3 == null) return null;
                 if (tok2.equals("+")) {
                     tok = add(tok, tok3);
@@ -179,7 +198,7 @@ public class SpreadSheet extends JFrame {
                             new StringTokenizer(formula, "=+*/-", true);
                     if (tokens.hasMoreTokens() && 
                         (tokens.nextToken().equals("="))) {
-                        String val = parseFormula(tokens, depth);
+                        String val = parseFormula(tokens, depth, r, c);
                         if (val != null) {
                             cellsTF[r][c].setText(val);
                             cells[r][c].valid = true;
