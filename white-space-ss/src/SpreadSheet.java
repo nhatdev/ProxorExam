@@ -92,6 +92,7 @@ public class SpreadSheet extends JFrame {
     // parameter keeps track of the length of the dependency chain.
     // Returns a string if value is valid, otherwise null.
     public String evaluateToken(String tok, int depth) {
+        tok = tok.trim();
         if (tok.length() >= 2 && tok.charAt(0) >= 'A' && 
             tok.charAt(0) < (char) ('A' + maxCols)) {
             int col = tok.charAt(0) - 'A';
