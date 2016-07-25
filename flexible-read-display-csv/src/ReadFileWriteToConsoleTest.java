@@ -102,6 +102,9 @@ public class ReadFileWriteToConsoleTest extends TestCase {
 		Runtime runtime = Runtime.getRuntime();
         long used = runtime.totalMemory() - runtime.freeMemory();
         ReadFileWriteToConsole a = new ReadFileWriteToConsole();
+
+        System.out.println(a.getColCount());
+
         try { // make the sheet to force an allocation
 			a.makeSheet();
 		} catch (IOException e) {
@@ -110,7 +113,9 @@ public class ReadFileWriteToConsoleTest extends TestCase {
         long usedAfter = runtime.totalMemory() - runtime.freeMemory();
         long objBytes = usedAfter - used;
         long dim = (long) (Math.sqrt((double) objBytes / 8) + 0.5);
-       
+
+        System.out.println(used + ", " + usedAfter + ", " + objBytes + ", " + dim + "/" + a.getColCount());
+
     	File file = new File("in.csv");
     	
         try {
@@ -132,7 +137,7 @@ public class ReadFileWriteToConsoleTest extends TestCase {
 		}
         
         int cols=a.getColCount();
-      
+        System.out.println(dim + "/" + a.getColCount());
         assertTrue("Failed to read many columns because static variable was used", dim == a.getColCount());
 
         // do the same for many rows
