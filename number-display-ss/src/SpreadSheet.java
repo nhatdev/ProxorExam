@@ -1,6 +1,9 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+
+import java.util.Formatter;
+import java.util.Locale;
 import java.util.StringTokenizer;
 
 /* SpreadSheet implements an array of cells within a graphical
@@ -194,11 +197,31 @@ public class SpreadSheet extends JFrame {
             cells[r][c].valid = true;
             cellsTF[r][c].setText("!!!");
         } else { // in case edits were made to cells, need to copy to cellsTF
-            cellsTF[r][c].setText(formula);
+            String text = formula;
+            if (formula.length() > 8) {
+                text = tryFormatNumber(formula);
+            }
+            cellsTF[r][c].setText(text);
         }
     }
-    
-    
+
+    private String tryFormatNumber(String formula) {
+        try {
+            double number = Double.parseDouble(formula);
+            if (isScientific(number)) {
+                return String.format(Locale.ENGLISH, "%6.2E", number);
+            } else {
+                // трябва да се гледа индекса на точката и да се билдне формата, 6.2, 5.3 т.н...
+                return String.format(Locale.ENGLISH, "%6.2f", number);
+            }
+        } catch (NumberFormatException e) {
+            return formula;
+        }
+    }
+    private boolean isScientific(double number) {
+        return Double.toString(number).toUpperCase().contains("E");
+    }
+
     // evaluate every cell in the spreadsheet
     public void evaluate() {
         // do not copy text fields generated from formulas
@@ -243,7 +266,9 @@ public class SpreadSheet extends JFrame {
         String f = cells[r][c].formula;
         // update the formula if it is just a value (non-'=' prefix)
         if (f.length() <= 0 || f.charAt(0) != '=') {
-            cells[r][c].formula = cell.getText();
+            if (!cell.getText().contains("E")) {
+                cells[r][c].formula = cell.getText();
+            }
             if (!ignoreTextFieldAction) {
                 formula.setText(cells[r][c].formula);
             }
